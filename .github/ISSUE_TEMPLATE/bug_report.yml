@@ -1,0 +1,86 @@
+name: Bug report
+description: Something isn't working — including codes that won't scan or import
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Scan and import problems are almost always
+        device-specific, so the device fields below matter more than usual.
+
+        Please use made-up contact details rather than real personal ones.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Fill in ...
+        2. Set format to ...
+        3. Scan with ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: problem-kind
+    attributes:
+      label: What kind of problem is it?
+      options:
+        - The code will not scan at all
+        - It scans, but the contact imports incorrectly
+        - The app itself misbehaves (UI, export, form)
+        - Something else
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Phone model and OS version
+      description: Only if the problem involves scanning.
+      placeholder: iPhone 14, iOS 18.2 / Pixel 7, Android 15
+
+  - type: input
+    id: scanner
+    attributes:
+      label: What did you scan with?
+      placeholder: Built-in camera app, Google Lens, a dedicated scanner app…
+
+  - type: dropdown
+    id: format
+    attributes:
+      label: Format
+      options: [vCard, MECARD, Not applicable]
+
+  - type: dropdown
+    id: ecc
+    attributes:
+      label: Error correction level
+      options: [L, M, Q, H, Not applicable]
+
+  - type: input
+    id: bytes
+    attributes:
+      label: Encoded size
+      description: The byte count shown in the app.
+      placeholder: e.g. 204 bytes
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS (where you generated the code)
+      placeholder: Chrome 131 on macOS 15
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots of the generated code are very helpful. Drag them in here.

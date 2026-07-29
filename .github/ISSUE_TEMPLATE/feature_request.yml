@@ -1,0 +1,60 @@
+name: Feature request
+description: Suggest an addition or improvement
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please open an issue before writing code for anything substantial — it saves
+        everyone a wasted pull request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the need rather than the solution, if you can.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to see?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Project constraints
+      description: >
+        Contact QR runs entirely in the browser and ships a deliberately small
+        dependency set. Please confirm how your idea fits.
+      options:
+        - label: This needs no server, no network requests, and no analytics
+        - label: This needs no new runtime dependency (dev dependencies are easier to justify)
+
+  - type: dropdown
+    id: formats
+    attributes:
+      label: Does this affect the encoded payload?
+      description: >
+        vCard and MECARD support different fields — MECARD has no organisation or
+        job title, for example.
+      options:
+        - "No, it's UI or export only"
+        - "Yes, vCard only"
+        - "Yes, both formats"
+        - "Not sure"
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Would you like to work on this?
+      options:
+        - label: I'd be willing to open a pull request
