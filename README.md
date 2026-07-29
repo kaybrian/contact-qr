@@ -33,12 +33,13 @@ Open http://localhost:5173 and start typing — the card and QR update live.
 
 ### Scripts
 
-| Command             | What it does                                  |
-| ------------------- | --------------------------------------------- |
-| `npm run dev`       | Start the Vite dev server with hot reload     |
-| `npm run typecheck` | Type-check only, without building             |
-| `npm run build`     | Type-check and build for production (`dist/`) |
-| `npm run preview`   | Serve the production build locally            |
+| Command                   | What it does                                        |
+| ------------------------- | --------------------------------------------------- |
+| `npm run dev`             | Start the Vite dev server with hot reload           |
+| `npm run typecheck`       | Type-check only, without building                   |
+| `npm run build`           | Type-check and build for production (`dist/`)       |
+| `npm run preview`         | Serve the production build locally                  |
+| `npm run verify:halftone` | Decode-test the photo QR renderer across strengths  |
 
 ## Tech stack
 

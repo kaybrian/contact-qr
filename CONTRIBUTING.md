@@ -101,6 +101,13 @@ payloads mean a denser grid, which scans less reliably — especially in print. 
 rule of thumb, a module should be at least ~0.4 mm when printed; below that, scan
 reliability falls off sharply regardless of error-correction level.
 
+**If you touch the photo QR renderer, run `npm run verify:halftone`.** It renders
+`src/lib/halftone.ts` output across a matrix of photo strengths and simulated camera
+blur, decodes each result, and fails if anything at or below the UI's default strength
+stops decoding. It is not a substitute for a real phone — a pass means the codes are
+well-formed, not that every handset reads them — but it will catch a regression
+immediately.
+
 **Test at low error correction too.** `L` is the most fragile setting and the first
 place a marginal change will break.
 
