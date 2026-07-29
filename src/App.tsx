@@ -3,7 +3,9 @@ import type { Contact, Ecc, Format } from "./types";
 import { emptyContact, sampleContact } from "./types";
 import { buildPayload, byteLength } from "./lib/encoders";
 import { downloadQrPng, downloadCardPng } from "./lib/download";
+import { HALFTONE_DEFAULTS } from "./lib/halftone";
 import { ContactForm } from "./components/ContactForm";
+import { PhotoInput } from "./components/PhotoInput";
 import { PreviewCard } from "./components/PreviewCard";
 import { Controls } from "./components/Controls";
 
@@ -29,9 +31,18 @@ export default function App() {
   const [contact, setContact] = useState<Contact>(sampleContact);
   const [fmt, setFmt] = useState<Format>("vcard");
   const [ecc, setEcc] = useState<Ecc>("M");
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [photoQr, setPhotoQr] = useState(true);
+  const [strength, setStrength] = useState<number>(HALFTONE_DEFAULTS.strength);
+  const [contrast, setContrast] = useState<number>(HALFTONE_DEFAULTS.contrast);
 
   const payload = useMemo(() => buildPayload(contact, fmt), [contact, fmt]);
   const bytes = useMemo(() => byteLength(payload), [payload]);
+
+  // The halftone needs the error-correction headroom, so it pins ECC to H.
+  const halftoneOn = Boolean(photo) && photoQr;
+  const activeEcc: Ecc = halftoneOn ? "H" : ecc;
+  const photoOpts = halftoneOn ? { photo, strength, contrast } : {};
 
   return (
     <div className="page">
@@ -68,13 +79,22 @@ export default function App() {
 
             <ContactForm contact={contact} onChange={setContact} />
 
+            <PhotoInput photo={photo} onChange={setPhoto} />
+
             <Controls
               fmt={fmt}
-              ecc={ecc}
+              ecc={activeEcc}
               bytes={bytes}
               payload={payload}
+              hasPhoto={Boolean(photo)}
+              photoQr={photoQr}
+              strength={strength}
+              contrast={contrast}
               onFmtChange={setFmt}
               onEccChange={setEcc}
+              onPhotoQrChange={setPhotoQr}
+              onStrengthChange={setStrength}
+              onContrastChange={setContrast}
             />
 
             <footer className="form-footer">
@@ -84,14 +104,17 @@ export default function App() {
               <button
                 className="btn-link"
                 type="button"
-                onClick={() => setContact(emptyContact)}
+                onClick={() => {
+                  setContact(emptyContact);
+                  setPhoto(null);
+                }}
               >
                 Clear
               </button>
               <button
                 className="btn-primary"
                 type="button"
-                onClick={() => void downloadQrPng(payload, ecc, contact)}
+                onClick={() => void downloadQrPng(payload, activeEcc, contact, photoOpts)}
               >
                 Download QR
               </button>
@@ -106,7 +129,7 @@ export default function App() {
                   <button
                     className="chip"
                     type="button"
-                    onClick={() => void downloadQrPng(payload, ecc, contact)}
+                    onClick={() => void downloadQrPng(payload, activeEcc, contact, photoOpts)}
                   >
                     <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                       <path d="M8 1a.75.75 0 0 1 .75.75v6.44l2.22-2.22a.75.75 0 1 1 1.06 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 0 1 1.06-1.06l2.22 2.22V1.75A.75.75 0 0 1 8 1zM2 11.75a.75.75 0 0 1 1.5 0v1.5h9v-1.5a.75.75 0 0 1 1.5 0v2.25a.75.75 0 0 1-.75.75H2.75a.75.75 0 0 1-.75-.75v-2.25z" />
@@ -116,7 +139,7 @@ export default function App() {
                   <button
                     className="chip"
                     type="button"
-                    onClick={() => void downloadCardPng(payload, ecc, contact)}
+                    onClick={() => void downloadCardPng(payload, activeEcc, contact, photoOpts)}
                   >
                     <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                       <path d="M1.75 3A.75.75 0 0 0 1 3.75v8.5c0 .414.336.75.75.75h12.5a.75.75 0 0 0 .75-.75v-8.5A.75.75 0 0 0 14.25 3H1.75zM2.5 4.5h11v7h-11v-7zM4 6.25c0-.414.336-.75.75-.75h2.5a.75.75 0 0 1 .75.75v2.5a.75.75 0 0 1-.75.75h-2.5A.75.75 0 0 1 4 8.75v-2.5zM9.5 6h2.75v1.5H9.5V6zm0 2.5h2.75V10H9.5V8.5z" />
@@ -125,7 +148,14 @@ export default function App() {
                   </button>
                 </div>
               </div>
-              <PreviewCard contact={contact} payload={payload} ecc={ecc} fmt={fmt} />
+              <PreviewCard
+                contact={contact}
+                payload={payload}
+                ecc={activeEcc}
+                fmt={fmt}
+                photo={photo}
+                halftone={halftoneOn ? { strength, contrast } : null}
+              />
             </div>
           </aside>
         </div>

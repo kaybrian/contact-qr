@@ -7,6 +7,9 @@ interface PreviewCardProps {
   payload: string;
   ecc: Ecc;
   fmt: Format;
+  photo?: string | null;
+  /** Non-null when the code should be drawn as a halftone of the photo. */
+  halftone?: { strength: number; contrast: number } | null;
 }
 
 const LINES: Array<{ tag: string; id: keyof Contact; full?: boolean }> = [
@@ -26,7 +29,14 @@ function initials(contact: Contact): string {
   return chars.toUpperCase() || "QR";
 }
 
-export function PreviewCard({ contact, payload, ecc, fmt }: PreviewCardProps) {
+export function PreviewCard({
+  contact,
+  payload,
+  ecc,
+  fmt,
+  photo,
+  halftone,
+}: PreviewCardProps) {
   const name = fullName(contact);
   const role = roleLine(contact);
   const lines = LINES.filter((l) => contact[l.id].trim());
@@ -34,7 +44,11 @@ export function PreviewCard({ contact, payload, ecc, fmt }: PreviewCardProps) {
   return (
     <div className="doc">
       <div className="doc-head">
-        <span className="doc-avatar">{initials(contact)}</span>
+        {photo ? (
+          <img className="doc-avatar photo" src={photo} alt="" />
+        ) : (
+          <span className="doc-avatar">{initials(contact)}</span>
+        )}
         <p className={name ? "doc-name" : "doc-name placeholder"}>
           {name || "New contact"}
         </p>
@@ -55,7 +69,13 @@ export function PreviewCard({ contact, payload, ecc, fmt }: PreviewCardProps) {
       </div>
 
       <div className="qr-stage">
-        <QRCanvas text={payload} ecc={ecc} />
+        <QRCanvas
+          text={payload}
+          ecc={ecc}
+          photo={halftone ? photo : null}
+          strength={halftone?.strength}
+          contrast={halftone?.contrast}
+        />
       </div>
 
       {lines.length > 0 ? (

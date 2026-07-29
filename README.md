@@ -12,6 +12,7 @@ Everything runs entirely in the browser. No server, no analytics, no data ever l
 - **Live preview** as a polished business card while you type
 - **Adjustable error correction** (L / M / Q / H) with a live encoded-size readout and scannability hint
 - **PNG export** — download the QR alone (1024 px) or the whole business card, rendered crisply at 3× on a canvas
+- **Photo QR** — drop in a profile photo and the code is drawn as a halftone of it, with adjustable strength and contrast. The photo is *not* added to the payload, so the encoded contact data is unchanged and the code still scans
 - **Raw data inspector** — see exactly what gets encoded
 - Fully client-side, keyboard-accessible, responsive down to mobile
 
@@ -32,12 +33,13 @@ Open http://localhost:5173 and start typing — the card and QR update live.
 
 ### Scripts
 
-| Command             | What it does                                  |
-| ------------------- | --------------------------------------------- |
-| `npm run dev`       | Start the Vite dev server with hot reload     |
-| `npm run typecheck` | Type-check only, without building             |
-| `npm run build`     | Type-check and build for production (`dist/`) |
-| `npm run preview`   | Serve the production build locally            |
+| Command                   | What it does                                        |
+| ------------------------- | --------------------------------------------------- |
+| `npm run dev`             | Start the Vite dev server with hot reload           |
+| `npm run typecheck`       | Type-check only, without building                   |
+| `npm run build`           | Type-check and build for production (`dist/`)       |
+| `npm run preview`         | Serve the production build locally                  |
+| `npm run verify:halftone` | Decode-test the photo QR renderer across strengths  |
 
 ## Tech stack
 
