@@ -21,7 +21,7 @@ const FIELDS: FieldDef[] = [
   {
     id: "note",
     label: "Note",
-    placeholder: "Anything extra — e.g. department, best time to call",
+    placeholder: "Anything extra, like a department or the best time to call",
     full: true,
     multiline: true,
   },
@@ -30,47 +30,36 @@ const FIELDS: FieldDef[] = [
 interface ContactFormProps {
   contact: Contact;
   onChange: (contact: Contact) => void;
-  onClear: () => void;
 }
 
-export function ContactForm({ contact, onChange, onClear }: ContactFormProps) {
+export function ContactForm({ contact, onChange }: ContactFormProps) {
   const set = (id: keyof Contact, value: string) =>
     onChange({ ...contact, [id]: value });
 
   return (
-    <section className="panel">
-      <div className="panel-pad">
-        <p className="panel-title">Contact details</p>
-        <div className="field-grid">
-          {FIELDS.map((f) => (
-            <div className={f.full ? "field full" : "field"} key={f.id}>
-              <label htmlFor={f.id}>{f.label}</label>
-              {f.multiline ? (
-                <textarea
-                  id={f.id}
-                  placeholder={f.placeholder}
-                  value={contact[f.id]}
-                  onChange={(e) => set(f.id, e.target.value)}
-                />
-              ) : (
-                <input
-                  id={f.id}
-                  type="text"
-                  autoComplete="off"
-                  placeholder={f.placeholder}
-                  value={contact[f.id]}
-                  onChange={(e) => set(f.id, e.target.value)}
-                />
-              )}
-            </div>
-          ))}
+    <div className="field-grid">
+      {FIELDS.map((f) => (
+        <div className={f.full ? "field full" : "field"} key={f.id}>
+          <label htmlFor={f.id}>{f.label}</label>
+          {f.multiline ? (
+            <textarea
+              id={f.id}
+              placeholder={f.placeholder}
+              value={contact[f.id]}
+              onChange={(e) => set(f.id, e.target.value)}
+            />
+          ) : (
+            <input
+              id={f.id}
+              type="text"
+              autoComplete="off"
+              placeholder={f.placeholder}
+              value={contact[f.id]}
+              onChange={(e) => set(f.id, e.target.value)}
+            />
+          )}
         </div>
-        <div className="clear-row">
-          <button className="ghost" type="button" onClick={onClear}>
-            Clear all fields
-          </button>
-        </div>
-      </div>
-    </section>
+      ))}
+    </div>
   );
 }

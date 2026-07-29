@@ -19,7 +19,7 @@ export function QRCanvas({ text, ecc }: QRCanvasProps) {
       errorCorrectionLevel: ecc,
       margin: 2,
       width: 420,
-      color: { dark: "#171B24", light: "#FFFFFF" },
+      color: { dark: "#171A26", light: "#FFFFFF" },
     })
       .then(() => {
         if (!cancelled) setError(null);
