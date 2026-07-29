@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contact QR — save straight to the phone book</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#E6E9EE;
+    --panel:#FFFFFF;
+    --ink:#171B24;
+    --muted:#5B6472;
+    --faint:#8A93A2;
+    --line:#D7DBE2;
+    --line-strong:#C4CAD4;
+    --accent:#1F6E5B;
+    --accent-hover:#185849;
+    --accent-soft:#E7F0EC;
+    --foil:#C99A3B;
+    --danger:#9A3B2E;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(23,27,36,.05), 0 8px 24px rgba(23,27,36,.08);
+    --shadow-card:0 2px 6px rgba(23,27,36,.06), 0 18px 44px rgba(23,27,36,.14);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Archivo",system-ui,-apple-system,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:32px 20px 64px;
+  }
+  .wrap{max-width:1060px;margin:0 auto}
+
+  header.masthead{margin-bottom:26px;max-width:640px}
+  .eyebrow{
+    font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin:0 0 10px;
+  }
+  h1{
+    font-family:"Fraunces",Georgia,serif;
+    font-weight:600;font-size:38px;line-height:1.05;
+    letter-spacing:-.01em;margin:0 0 12px;
+  }
+  header.masthead p{margin:0;color:var(--muted);font-size:15.5px;max-width:560px}
+
+  .layout{
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:26px;align-items:start;
+  }
+  @media (max-width:840px){ .layout{grid-template-columns:1fr} }
+
+  .panel{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);box-shadow:var(--shadow);
+  }
+  .panel-pad{padding:22px 22px 24px}
+
+  .panel-title{
+    font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--faint);font-weight:600;margin:0 0 16px;
+  }
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 14px}
+  .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .field.full{grid-column:1 / -1}
+  label{font-size:12.5px;font-weight:600;color:var(--muted)}
+  input, textarea{
+    font-family:inherit;font-size:14.5px;color:var(--ink);
+    background:#FBFCFD;border:1px solid var(--line-strong);
+    border-radius:9px;padding:10px 11px;width:100%;
+    transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  input::placeholder, textarea::placeholder{color:#AEB6C2}
+  input:focus, textarea:focus{
+    outline:none;border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);background:#fff;
+  }
+  textarea{resize:vertical;min-height:44px}
+
+  .clear-row{margin-top:16px;display:flex;justify-content:flex-end}
+  .ghost{
+    background:none;border:1px solid var(--line-strong);color:var(--muted);
+    font-family:inherit;font-size:13px;font-weight:600;
+    padding:7px 13px;border-radius:8px;cursor:pointer;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .ghost:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .ghost:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* ---- Preview side ---- */
+  .preview-col{position:sticky;top:24px;display:flex;flex-direction:column;gap:18px}
+  @media (max-width:840px){ .preview-col{position:static} }
+
+  /* the signature: the business card */
+  .card{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:16px;box-shadow:var(--shadow-card);
+    padding:26px;display:flex;gap:22px;align-items:center;
+    position:relative;overflow:hidden;
+  }
+  .card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+    background:linear-gradient(180deg,var(--foil),#E4C275 55%,var(--foil));
+  }
+  .qr-holder{
+    flex:0 0 auto;width:150px;height:150px;
+    display:flex;align-items:center;justify-content:center;
+    background:#fff;border-radius:10px;
+  }
+  .qr-holder canvas{width:150px !important;height:150px !important;display:block;border-radius:4px}
+  .qr-error{
+    font-size:12.5px;color:var(--danger);text-align:center;padding:0 8px;line-height:1.35;
+  }
+  .card-info{min-width:0;flex:1}
+  .card-name{
+    font-family:"Fraunces",Georgia,serif;font-weight:600;
+    font-size:24px;line-height:1.1;letter-spacing:-.01em;
+    margin:0;color:var(--ink);word-break:break-word;
+  }
+  .card-name.placeholder{color:#C0C6D0}
+  .card-role{
+    font-size:13px;color:var(--muted);margin:5px 0 0;font-weight:500;
+    word-break:break-word;
+  }
+  .foil-rule{height:1px;background:var(--foil);opacity:.5;margin:13px 0;width:38px}
+  .card-lines{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+  .card-lines li{
+    font-size:12.5px;color:var(--ink);display:flex;gap:8px;align-items:baseline;
+    word-break:break-word;
+  }
+  .card-lines .tag{
+    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+    font-weight:700;flex:0 0 34px;padding-top:1px;
+  }
+  .scan-hint{
+    margin-top:14px;font-size:11px;color:var(--faint);letter-spacing:.03em;
+  }
+
+  /* controls block */
+  .controls .panel-pad{padding:18px 20px 20px}
+  .ctrl-row{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+  .ctrl-row:last-of-type{margin-bottom:0}
+  .ctrl-label{font-size:12px;font-weight:600;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline}
+  .ctrl-note{font-size:11px;color:var(--faint);font-weight:400}
+  .segmented{display:flex;gap:6px;flex-wrap:wrap}
+  .seg{
+    flex:1;min-width:0;text-align:center;font-family:inherit;font-size:13px;font-weight:600;
+    padding:8px 6px;border:1px solid var(--line-strong);border-radius:8px;background:#FBFCFD;
+    color:var(--muted);cursor:pointer;transition:all .13s ease;white-space:nowrap;
+  }
+  .seg:hover{border-color:var(--accent);color:var(--accent)}
+  .seg.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .seg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .seg small{display:block;font-size:10px;font-weight:500;opacity:.8;margin-top:1px}
+
+  .meta{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:12px;color:var(--muted);border-top:1px solid var(--line);
+    margin-top:16px;padding-top:14px;
+  }
+  .meta b{color:var(--ink);font-weight:600}
+  .meta .size-good{color:var(--accent)}
+  .meta .size-warn{color:var(--foil)}
+  .meta .size-tight{color:var(--danger)}
+
+  .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .btn{
+    flex:1;min-width:130px;font-family:inherit;font-size:13.5px;font-weight:600;
+    padding:11px 12px;border-radius:9px;cursor:pointer;border:1px solid transparent;
+    transition:background .15s, border-color .15s, color .15s;
+  }
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:var(--accent-hover)}
+  .btn-secondary{background:#fff;border-color:var(--line-strong);color:var(--ink)}
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  details.raw{margin-top:2px}
+  details.raw summary{
+    cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);
+    padding:6px 0;list-style:none;user-select:none;
+  }
+  details.raw summary::-webkit-details-marker{display:none}
+  details.raw summary::before{content:"▸ ";color:var(--faint)}
+  details.raw[open] summary::before{content:"▾ "}
+  pre.raw-out{
+    font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.55;
+    background:#F5F6F8;border:1px solid var(--line);border-radius:9px;
+    padding:12px 13px;margin:6px 0 0;white-space:pre-wrap;word-break:break-all;color:#2B3340;
+    max-height:220px;overflow:auto;
+  }
+
+  .howto{
+    margin-top:26px;background:transparent;border:1px dashed var(--line-strong);
+    border-radius:var(--radius);padding:18px 20px;color:var(--muted);font-size:13.5px;
+    max-width:100%;
+  }
+  .howto h2{font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin:0 0 10px}
+  .howto p{margin:0 0 9px}
+  .howto p:last-child{margin-bottom:0}
+  .howto b{color:var(--ink);font-weight:600}
+  .kbd{font-family:"IBM Plex Mono",monospace;font-size:12px;background:#fff;border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+
+  @media (prefers-reduced-motion:reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">Contact QR generator</p>
+    <h1>One scan, straight into the phone book.</h1>
+    <p>Fill in a person's details, and the QR encodes them as a vCard. When someone points their phone camera at it, the phone recognises the contact and opens its <b>Add to Contacts</b> screen — no app, no typing.</p>
+  </header>
+
+  <div class="layout">
+    <!-- LEFT: form -->
+    <section class="panel">
+      <div class="panel-pad">
+        <p class="panel-title">Contact details</p>
+        <div class="field-grid">
+          <div class="field">
+            <label for="first">First name</label>
+            <input id="first" type="text" placeholder="Amara" value="Amara" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="last">Last name</label>
+            <input id="last" type="text" placeholder="Okoye" value="Okoye" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="org">Company / organisation</label>
+            <input id="org" type="text" placeholder="InversePay" value="InversePay" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="title">Job title</label>
+            <input id="title" type="text" placeholder="Partnerships Lead" value="Partnerships Lead" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="mobile">Mobile</label>
+            <input id="mobile" type="text" placeholder="+250 788 000 000" value="+250 788 123 456" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="work">Work phone</label>
+            <input id="work" type="text" placeholder="+250 788 000 001" value="" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="text" placeholder="amara@inversepay.com" value="amara@inversepay.com" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="url">Website</label>
+            <input id="url" type="text" placeholder="inversepay.com" value="inversepay.com" autocomplete="off">
+          </div>
+          <div class="field full">
+            <label for="address">Address</label>
+            <input id="address" type="text" placeholder="Kigali, Rwanda" value="" autocomplete="off">
+          </div>
+          <div class="field full">
+            <label for="note">Note</label>
+            <textarea id="note" placeholder="Anything extra — e.g. department, best time to call"></textarea>
+          </div>
+        </div>
+        <div class="clear-row">
+          <button class="ghost" id="clearBtn" type="button">Clear all fields</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: preview + controls -->
+    <div class="preview-col">
+      <div class="card" id="card">
+        <div class="qr-holder"><div id="qr"></div></div>
+        <div class="card-info">
+          <p class="card-name" id="pvName">Amara Okoye</p>
+          <p class="card-role" id="pvRole">Partnerships Lead · InversePay</p>
+          <div class="foil-rule"></div>
+          <ul class="card-lines" id="pvLines"></ul>
+          <p class="scan-hint">Scan to save this contact</p>
+        </div>
+      </div>
+
+      <section class="panel controls">
+        <div class="panel-pad">
+          <div class="ctrl-row">
+            <span class="ctrl-label">Format</span>
+            <div class="segmented" id="fmtSeg">
+              <button class="seg active" data-fmt="vcard" type="button">vCard<small>full details</small></button>
+              <button class="seg" data-fmt="mecard" type="button">MECARD<small>smallest code</small></button>
+            </div>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">Error correction <span class="ctrl-note">lower = smaller code</span></span>
+            <div class="segmented" id="eccSeg">
+              <button class="seg" data-ecc="L" type="button">L</button>
+              <button class="seg active" data-ecc="M" type="button">M</button>
+              <button class="seg" data-ecc="Q" type="button">Q</button>
+              <button class="seg" data-ecc="H" type="button">H</button>
+            </div>
+          </div>
+
+          <div class="meta">
+            <span>Encoded size: <b id="byteCount">0 bytes</b></span>
+            <span id="densityNote" class="size-good">roomy — scans easily</span>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-primary" id="dlQr" type="button">Download QR (PNG)</button>
+            <button class="btn btn-secondary" id="dlCard" type="button">Download card (PNG)</button>
+          </div>
+
+          <details class="raw">
+            <summary>Show the raw encoded data</summary>
+            <pre class="raw-out" id="rawOut"></pre>
+          </details>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="howto">
+    <h2>How to use it</h2>
+    <p><b>Test it now:</b> open your phone's camera and point it at the code above. iPhone and most Android phones show an "Add Contact" banner instantly. (Some older Androids need a QR-reader app or Google Lens.)</p>
+    <p><b>Keep the code small &amp; scannable:</b> fewer fields and lower error correction (<span class="kbd">L</span>) make a simpler grid that scans reliably even when printed small. <b>MECARD</b> makes the tightest code but can't carry company or job title — use <b>vCard</b> when those matter. Always keep it dark-on-white with a clear margin.</p>
+    <p><b>Phone numbers:</b> use full international format (e.g. <span class="kbd">+250…</span>) so the saved contact works when someone calls from another country.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var ids = ["first","last","org","title","mobile","work","email","url","address","note"];
+  var el = {};
+  ids.forEach(function(id){ el[id] = document.getElementById(id); });
+
+  var state = { fmt:"vcard", ecc:"M" };
+  var qrLib = (typeof QRCode !== "undefined") ? QRCode : null;
+
+  function val(id){ return (el[id].value || "").trim(); }
+
+  // ---------- escaping ----------
+  function escVCard(s){
+    return String(s).replace(/\\/g,"\\\\").replace(/\n/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;");
+  }
+  function escMecard(s){
+    return String(s).replace(/([\\;:,])/g,"\\$1");
+  }
+
+  // ---------- builders ----------
+  function buildVCard(d){
+    var L = ["BEGIN:VCARD","VERSION:3.0"];
+    if(d.first || d.last) L.push("N:"+escVCard(d.last)+";"+escVCard(d.first)+";;;");
+    var fn = (d.first+" "+d.last).trim();
+    if(fn) L.push("FN:"+escVCard(fn));
+    if(d.org)   L.push("ORG:"+escVCard(d.org));
+    if(d.title) L.push("TITLE:"+escVCard(d.title));
+    if(d.mobile)L.push("TEL;TYPE=CELL:"+d.mobile);
+    if(d.work)  L.push("TEL;TYPE=WORK,VOICE:"+d.work);
+    if(d.email) L.push("EMAIL;TYPE=INTERNET:"+escVCard(d.email));
+    if(d.url)   L.push("URL:"+d.url);
+    if(d.address) L.push("ADR;TYPE=WORK:;;"+escVCard(d.address)+";;;;");
+    if(d.note)  L.push("NOTE:"+escVCard(d.note));
+    L.push("END:VCARD");
+    return L.join("\r\n");
+  }
+  function buildMecard(d){
+    var segs = [];
+    if(d.first || d.last) segs.push("N:"+escMecard(d.last)+","+escMecard(d.first)+";");
+    if(d.mobile) segs.push("TEL:"+d.mobile+";");
+    if(d.work)   segs.push("TEL:"+d.work+";");
+    if(d.email)  segs.push("EMAIL:"+escMecard(d.email)+";");
+    if(d.url)    segs.push("URL:"+escMecard(d.url)+";");
+    if(d.address)segs.push("ADR:"+escMecard(d.address)+";");
+    if(d.note)   segs.push("NOTE:"+escMecard(d.note)+";");
+    return "MECARD:"+segs.join("")+";";
+  }
+
+  function currentData(){
+    return {
+      first:val("first"), last:val("last"), org:val("org"), title:val("title"),
+      mobile:val("mobile"), work:val("work"), email:val("email"),
+      url:val("url"), address:val("address"), note:val("note")
+    };
+  }
+  function payload(d){
+    return state.fmt === "mecard" ? buildMecard(d) : buildVCard(d);
+  }
+  function byteLen(s){ return new Blob([s]).size; }
+
+  // ---------- QR render ----------
+  var qrBox = document.getElementById("qr");
+  function renderQR(text){
+    qrBox.innerHTML = "";
+    if(!qrLib){
+      var e = document.createElement("div");
+      e.className = "qr-error";
+      e.textContent = "Couldn't load the QR generator (check your connection and reload).";
+      qrBox.appendChild(e);
+      return;
+    }
+    var c = document.createElement("canvas");
+    qrBox.appendChild(c);
+    qrLib.toCanvas(c, text || " ", {
+      errorCorrectionLevel: state.ecc,
+      margin: 2,
+      width: 420,
+      color: { dark:"#171B24", light:"#FFFFFF" }
+    }, function(err){
+      if(err){
+        qrBox.innerHTML = "";
+        var e2 = document.createElement("div");
+        e2.className = "qr-error";
+        e2.textContent = "Too much data for this code — remove a field or lower the error correction.";
+        qrBox.appendChild(e2);
+      }
+    });
+  }
+
+  // ---------- preview card text ----------
+  function refreshPreview(d){
+    var name = (d.first+" "+d.last).trim();
+    var nameEl = document.getElementById("pvName");
+    if(name){ nameEl.textContent = name; nameEl.classList.remove("placeholder"); }
+    else { nameEl.textContent = "New contact"; nameEl.classList.add("placeholder"); }
+
+    var role = [d.title, d.org].filter(Boolean).join(" · ");
+    document.getElementById("pvRole").textContent = role;
+    document.getElementById("pvRole").style.display = role ? "" : "none";
+
+    var lines = document.getElementById("pvLines");
+    lines.innerHTML = "";
+    function add(tag, value){
+      if(!value) return;
+      var li = document.createElement("li");
+      var t = document.createElement("span"); t.className="tag"; t.textContent=tag;
+      var v = document.createElement("span"); v.textContent=value;
+      li.appendChild(t); li.appendChild(v); lines.appendChild(li);
+    }
+    add("Cell", d.mobile);
+    add("Work", d.work);
+    add("Mail", d.email);
+    add("Web", d.url);
+    add("Addr", d.address);
+  }
+
+  // ---------- density hint ----------
+  function refreshMeta(bytes){
+    var bc = document.getElementById("byteCount");
+    bc.textContent = bytes + (bytes===1 ? " byte" : " bytes");
+    var note = document.getElementById("densityNote");
+    note.className = "";
+    if(bytes < 180){ note.classList.add("size-good"); note.textContent = "roomy — scans easily"; }
+    else if(bytes < 330){ note.classList.add("size-warn"); note.textContent = "moderate — fine on screen & normal print"; }
+    else { note.classList.add("size-tight"); note.textContent = "dense — trim fields for small prints"; }
+  }
+
+  // ---------- main update ----------
+  var lastText = "";
+  function update(){
+    var d = currentData();
+    var text = payload(d);
+    lastText = text;
+    renderQR(text);
+    refreshPreview(d);
+    refreshMeta(byteLen(text));
+    document.getElementById("rawOut").textContent = text;
+  }
+
+  // ---------- downloads ----------
+  function download(dataUrl, filename){
+    var a = document.createElement("a");
+    a.href = dataUrl; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+  function fileBase(){
+    var d = currentData();
+    var n = (d.first+" "+d.last).trim() || "contact";
+    return n.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") + "-qr";
+  }
+
+  document.getElementById("dlQr").addEventListener("click", function(){
+    if(!qrLib) return;
+    qrLib.toDataURL(lastText || " ", {
+      errorCorrectionLevel: state.ecc, margin: 4, width: 1024,
+      color:{ dark:"#171B24", light:"#FFFFFF" }
+    }, function(err, url){
+      if(err) return;
+      download(url, fileBase()+".png");
+    });
+  });
+
+  // draw a business-card PNG on a canvas (no extra libraries)
+  document.getElementById("dlCard").addEventListener("click", function(){
+    if(!qrLib) return;
+    var d = currentData();
+    var scale = 3;                 // crisp export
+    var W = 1000, H = 560;
+    var cv = document.createElement("canvas");
+    cv.width = W*scale; cv.height = H*scale;
+    var ctx = cv.getContext("2d");
+    ctx.scale(scale, scale);
+
+    // background
+    ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0,0,W,H);
+    // foil edge
+    ctx.fillStyle = "#C99A3B"; ctx.fillRect(0,0,14,H);
+
+    // render QR to an offscreen canvas, then place it
+    var qc = document.createElement("canvas");
+    qrLib.toCanvas(qc, lastText || " ", {
+      errorCorrectionLevel: state.ecc, margin: 2, width: 360,
+      color:{ dark:"#171B24", light:"#FFFFFF" }
+    }, function(err){
+      if(err) return;
+      var qSize = 300, qx = 70, qy = (H - qSize)/2;
+      ctx.drawImage(qc, qx, qy, qSize, qSize);
+
+      // text block
+      var tx = qx + qSize + 60;
+      var name = (d.first+" "+d.last).trim() || "New contact";
+      ctx.fillStyle = "#171B24";
+      ctx.font = "600 46px 'Fraunces', Georgia, serif";
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText(name, tx, 190, W - tx - 50);
+
+      var role = [d.title, d.org].filter(Boolean).join("  ·  ");
+      if(role){
+        ctx.fillStyle = "#5B6472";
+        ctx.font = "500 20px 'Archivo', sans-serif";
+        ctx.fillText(role, tx, 224, W - tx - 50);
+      }
+      // foil rule
+      ctx.fillStyle = "#C99A3B"; ctx.fillRect(tx, 250, 52, 2);
+
+      // detail lines
+      var y = 296;
+      ctx.font = "500 19px 'Archivo', sans-serif";
+      function line(tag, value){
+        if(!value) return;
+        ctx.fillStyle = "#8A93A2";
+        ctx.font = "700 12px 'Archivo', sans-serif";
+        ctx.fillText(tag.toUpperCase(), tx, y);
+        ctx.fillStyle = "#171B24";
+        ctx.font = "500 19px 'Archivo', sans-serif";
+        ctx.fillText(value, tx + 66, y, W - tx - 66 - 50);
+        y += 40;
+      }
+      line("Cell", d.mobile);
+      line("Work", d.work);
+      line("Mail", d.email);
+      line("Web",  d.url);
+      line("Addr", d.address);
+
+      download(cv.toDataURL("image/png"), fileBase()+"-card.png");
+    });
+  });
+
+  // ---------- segmented controls ----------
+  document.getElementById("fmtSeg").addEventListener("click", function(e){
+    var b = e.target.closest(".seg"); if(!b) return;
+    state.fmt = b.getAttribute("data-fmt");
+    this.querySelectorAll(".seg").forEach(function(x){ x.classList.toggle("active", x===b); });
+    update();
+  });
+  document.getElementById("eccSeg").addEventListener("click", function(e){
+    var b = e.target.closest(".seg"); if(!b) return;
+    state.ecc = b.getAttribute("data-ecc");
+    this.querySelectorAll(".seg").forEach(function(x){ x.classList.toggle("active", x===b); });
+    update();
+  });
+
+  // ---------- inputs ----------
+  ids.forEach(function(id){ el[id].addEventListener("input", update); });
+  document.getElementById("clearBtn").addEventListener("click", function(){
+    ids.forEach(function(id){ el[id].value = ""; });
+    update();
+    el.first.focus();
+  });
+
+  // ---------- init (wait for fonts + lib) ----------
+  function boot(){
+    qrLib = (typeof QRCode !== "undefined") ? QRCode : null;
+    update();
+    if(document.fonts && document.fonts.ready){ document.fonts.ready.then(update); }
+  }
+  if(document.readyState === "complete"){ boot(); }
+  else { window.addEventListener("load", boot); }
+})();
+</script>
+</body>
+</html>
