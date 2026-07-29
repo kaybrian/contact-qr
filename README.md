@@ -17,7 +17,9 @@ Everything runs entirely in the browser. No server, no analytics, no data ever l
 
 ## Getting started
 
-Requires [Node.js](https://nodejs.org/) 18+.
+Requires [Node.js](https://nodejs.org/) `^20.19` or `>=22.12` — this is what Vite and
+Rolldown declare in their `engines` fields. If you use `nvm`, run `nvm use` to pick up
+the version in `.nvmrc`.
 
 ```bash
 git clone https://github.com/kaybrian/contact-qr.git
@@ -30,11 +32,12 @@ Open http://localhost:5173 and start typing — the card and QR update live.
 
 ### Scripts
 
-| Command           | What it does                                  |
-| ----------------- | --------------------------------------------- |
-| `npm run dev`     | Start the Vite dev server with hot reload     |
-| `npm run build`   | Type-check and build for production (`dist/`) |
-| `npm run preview` | Serve the production build locally            |
+| Command             | What it does                                  |
+| ------------------- | --------------------------------------------- |
+| `npm run dev`       | Start the Vite dev server with hot reload     |
+| `npm run typecheck` | Type-check only, without building             |
+| `npm run build`     | Type-check and build for production (`dist/`) |
+| `npm run preview`   | Serve the production build locally            |
 
 ## Tech stack
 
@@ -73,7 +76,12 @@ Issues and pull requests are welcome! For larger changes, please open an issue f
 1. Fork the repo and create a branch
 2. `npm install && npm run dev`
 3. Make your change, then check that `npm run build` passes
-4. Open a pull request
+4. If you changed anything that affects the QR output, scan it with a real phone
+5. Open a pull request
+
+See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the full guide — project constraints,
+how to test QR changes properly, where things live, and the vCard/MECARD differences
+that catch people out.
 
 ## License
 
