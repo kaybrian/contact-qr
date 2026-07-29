@@ -25,3 +25,4 @@ pnpm-debug.log*
 # Tooling state
 .claude-flow/
 
+.claude/
