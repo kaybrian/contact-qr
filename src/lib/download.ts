@@ -1,12 +1,30 @@
 import QRCode from "qrcode";
 import type { Contact, Ecc } from "../types";
 import { fullName, roleLine } from "../types";
+import { buildHalftone, drawHalftone, photoToGray } from "./halftone";
+
+/** Photo treatment shared by both exports. `photo` null renders an ordinary QR. */
+export interface PhotoOptions {
+  photo?: string | null;
+  strength?: number;
+  contrast?: number;
+}
 
 const INK = "#171A26";
 const MUTED = "#5C6577";
 const FAINT = "#98A0AF";
 const ACCENT = "#2B5CE6";
 const LINE = "#E6E8EE";
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Could not read that image."));
+    img.src = src;
+  });
+}
 
 function triggerDownload(dataUrl: string, filename: string): void {
   const a = document.createElement("a");
@@ -27,18 +45,47 @@ export function fileBase(contact: Contact): string {
   );
 }
 
+/** Renders the QR to an offscreen canvas, halftoned if a photo is supplied. */
+async function renderQrCanvas(
+  payload: string,
+  ecc: Ecc,
+  widthPx: number,
+  margin: number,
+  { photo, strength, contrast }: PhotoOptions,
+): Promise<HTMLCanvasElement> {
+  const canvas = document.createElement("canvas");
+  if (photo) {
+    const result = buildHalftone({
+      payload: payload || " ",
+      ecc,
+      source: await photoToGray(photo, 512),
+      strength,
+      contrast,
+    });
+    drawHalftone(canvas, result, {
+      targetPx: widthPx,
+      dark: INK,
+      quietModules: margin,
+    });
+  } else {
+    await QRCode.toCanvas(canvas, payload || " ", {
+      errorCorrectionLevel: ecc,
+      margin,
+      width: widthPx,
+      color: { dark: INK, light: "#FFFFFF" },
+    });
+  }
+  return canvas;
+}
+
 export async function downloadQrPng(
   payload: string,
   ecc: Ecc,
   contact: Contact,
+  photoOpts: PhotoOptions = {},
 ): Promise<void> {
-  const url = await QRCode.toDataURL(payload || " ", {
-    errorCorrectionLevel: ecc,
-    margin: 4,
-    width: 1024,
-    color: { dark: INK, light: "#FFFFFF" },
-  });
-  triggerDownload(url, `${fileBase(contact)}.png`);
+  const canvas = await renderQrCanvas(payload, ecc, 1024, 4, photoOpts);
+  triggerDownload(canvas.toDataURL("image/png"), `${fileBase(contact)}.png`);
 }
 
 /** Draws the full contact card onto a canvas and downloads it as a PNG. */
@@ -46,6 +93,7 @@ export async function downloadCardPng(
   payload: string,
   ecc: Ecc,
   contact: Contact,
+  photoOpts: PhotoOptions = {},
 ): Promise<void> {
   const scale = 3; // crisp export
   const W = 1000;
@@ -64,13 +112,7 @@ export async function downloadCardPng(
   ctx.fillStyle = ACCENT;
   ctx.fillRect(0, 0, 10, H);
 
-  const qrCanvas = document.createElement("canvas");
-  await QRCode.toCanvas(qrCanvas, payload || " ", {
-    errorCorrectionLevel: ecc,
-    margin: 2,
-    width: 360,
-    color: { dark: INK, light: "#FFFFFF" },
-  });
+  const qrCanvas = await renderQrCanvas(payload, ecc, 360, 2, photoOpts);
 
   const qSize = 300;
   const qx = 70;
@@ -81,6 +123,38 @@ export async function downloadCardPng(
   ctx.drawImage(qrCanvas, qx, qy, qSize, qSize);
 
   const tx = qx + qSize + 64;
+
+  // Circular avatar above the name, when a photo is set.
+  if (photoOpts.photo) {
+    const avatar = await loadImage(photoOpts.photo);
+    const r = 36;
+    const cx = tx + r;
+    const cy = 108;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    const side = Math.min(avatar.width, avatar.height);
+    ctx.drawImage(
+      avatar,
+      (avatar.width - side) / 2,
+      (avatar.height - side) / 2,
+      side,
+      side,
+      cx - r,
+      cy - r,
+      r * 2,
+      r * 2,
+    );
+    ctx.restore();
+    ctx.strokeStyle = LINE;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
   const name = fullName(contact) || "New contact";
   ctx.fillStyle = INK;
   ctx.font = "700 44px 'Inter', system-ui, sans-serif";

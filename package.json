@@ -23,7 +23,8 @@
     "dev": "vite",
     "typecheck": "tsc -b --noEmit",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify:halftone": "node --experimental-strip-types scripts/verify-halftone.ts"
   },
   "dependencies": {
     "qrcode": "^1.5.4",
@@ -35,6 +36,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^6.0.4",
+    "jsqr": "^1.4.0",
     "typescript": "^5.6.3",
     "vite": "^8.1.5"
   }
