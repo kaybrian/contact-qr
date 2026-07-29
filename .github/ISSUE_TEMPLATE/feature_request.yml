@@ -32,8 +32,9 @@ body:
         dependency set. Please confirm how your idea fits.
       options:
         - label: This needs no server, no network requests, and no analytics
+          required: true
         - label: This needs no new runtime dependency (dev dependencies are easier to justify)
-
+          required: true
   - type: dropdown
     id: formats
     attributes:
